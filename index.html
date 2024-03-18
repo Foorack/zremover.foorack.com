@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>zremover.foorack.com</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link rel="icon" href="favicon.png" />
+  </head>
+  <body>
+    <h1>BMC ZRemover</h1>
+
+    System message: <span id="zrRES"></span>
+
+    <br />
+    <br />
+
+    <button id="zrOK" style="padding: 2rem">Clean!</button>
+
+    <br />
+    <br />
+
+    <textarea id="zrVAL" name="text" cols="80" rows="50"></textarea>
+
+    <script type="text/javascript">
+      function isObject(v) {
+        return "[object Object]" === Object.prototype.toString.call(v);
+      }
+
+      function sortJSON(o) {
+        if (Array.isArray(o)) {
+          // Do NOT sort arrays
+          return o;
+        } else if (isObject(o)) {
+          return Object.keys(o)
+            .sort()
+            .reduce(function (prev, curr) {
+              prev[curr] = sortJSON(o[curr]);
+
+              return prev;
+            }, {});
+        }
+        return o;
+      }
+
+      function filterJSON(o, filter) {
+        // Remove any keys starting with "filter"
+        if (Array.isArray(o)) {
+          return o.map(function (v) {
+            return filterJSON(v, filter);
+          });
+        } else if (isObject(o)) {
+          return Object.keys(o)
+            .sort()
+            .reduce(function (prev, curr) {
+              console.log("filterJSON", curr, filter);
+              if (curr.startsWith(filter)) {
+                return prev;
+              }
+              const orig = o[curr];
+              prev[curr] = orig === null ? null : filterJSON(o[curr], filter);
+
+              return prev;
+            }, {});
+        } else {
+          // Do nothing
+          return o;
+        }
+      }
+
+      document.getElementById("zrOK").addEventListener("click", function () {
+        const zrVAL = document.getElementById("zrVAL").value;
+        // Parse json
+        let result = JSON.parse(zrVAL);
+        // Remove any keys starting with "zT" or "z1" or ...
+        // loop A-Z
+        for (let i = 65; i <= 90; i++) {
+          const filter = "z" + String.fromCharCode(i);
+          result = filterJSON(result, filter);
+        }
+        result = filterJSON(result, "ztmp");
+        result = filterJSON(result, "z1");
+        result = filterJSON(result, "z2");
+        // Sort the result
+        result = sortJSON(result);
+        // Stringify the result
+        result = JSON.stringify(result, null, 2);
+
+        document.getElementById("zrVAL").value = result;
+        document.getElementById("zrRES").innerText = "OK! " + new Date().toISOString();
+      });
+    </script>
+  </body>
+</html>
